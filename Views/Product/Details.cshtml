@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Details";
+}
+
+@model ProductSales.DTOs.ProductDTO;
+
+<h1>Details</h1>
+<h4>Product</h4>
+<hr />
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">ProductID</dt>
+        <dt class="col-sm-10">@Model.ProductID</dt>
+        <dt class="col-sm-2">name</dt>
+        <dt class="col-sm-10">@Model.Name</dt>
+        <dt class="col-sm-2">Price</dt>
+        <dt class="col-sm-10">@Model.Price</dt>
+    </dl>
+</div>
+
+<a asp-action="Index">Back to list</a>
