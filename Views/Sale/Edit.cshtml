@@ -1,0 +1,169 @@
+@{
+    ViewData["Title"] = "Edit";
+}
+
+
+@model ProductSales.DTOs.SaleDTO
+
+<h1>Edit Sale</h1>
+
+<h4>Sale</h4>
+
+<hr />
+
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Edit">
+            <input type="hidden" asp-for="SaleID" />
+            <div class="form-group">
+                <label asp-for="Date" class="control-label"></label>
+                <input asp-for="Date" class="form-control" />
+            </div>
+
+            <h4>Sale Details</h4>
+            <hr />
+
+            <div id="sale-details">
+                @for (var i = 0; i < Model.SaleDetails.Count; i++)
+                {
+
+                    <div class="sale-detail">
+                        <div class="form-group">
+                            <label>Product</label>
+                            <select name="SaleDetails[@i].ProductID" class="form-control product-select">
+                                <option value="">Select Product</option>
+                                @foreach (var product in ViewBag.Products)
+                                {
+                                    var select = Model.SaleDetails[i].ProductID == product.ProductID ? "selected=\"selected\"": "";
+                                    
+                                    @Html.Raw($"<option value=\"{product.ProductID}\" {select}>{product.Name}</option>")
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label">Quantity</label>
+                            <input class="form-control quantity-input" type="number" min="1"
+                                name="SaleDetails[@i].Quantity" value="@Model.SaleDetails[i].Quantity"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label">Unit Price</label>
+                            <input class="form-control price-input" readonly value="@Model.SaleDetails[i].Price" name="SaleDetails[@i].Price" />
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label">Subtotal</label>
+                            <input class="form-control subtotal-input" readonly name="SaleDetails[@i].Subtotal" value="@(Model.SaleDetails[i].Quantity* Model.SaleDetails[i].Price)" />
+                        </div>
+                    </div>
+                }
+            </div>
+
+
+            <div class="form-group">
+                <button type="button" id="add-detail" class="btn btn-secondary">Add Product</button>
+            </div>
+
+            <div class="form-group">
+                <label>Total</label>
+                <input id="total" class="form-control" name="Total" readonly />
+            </div>
+
+            <div class="form-group">
+                <input type="submit" class="form-control btn btn-primary" value="Save" />
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to list</a>
+</div>
+
+@section Scripts
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let detailIndex = document.querySelectorAll('.sale-detail').length;
+
+            function updateSubtotal(index) {
+                const quantity = parseFloat(document.querySelector(`.sale-detail:nth-child(${index + 1}) .quantity-input`).value) || 0;
+                const price = parseFloat(document.querySelector(`.sale-detail:nth-child(${index + 1}) .price-input`).value) ||0;
+
+                const subtotal = quantity * price;
+                document.querySelector(`.sale-detail:nth-child(${index + 1}) .subtotal-input`).value = subtotal.toFixed(2);
+                updateTotal();
+            }
+
+            function updateTotal() {
+                const subtotals = document.querySelectorAll('.subtotal-input');
+                let total = 0;
+                subtotals.forEach(subtotal => {
+                    total += parseFloat(subtotal.value) || 0;
+                });
+                document.getElementById('total').value = total.toFixed(2);
+            }
+
+            function attachEventHandlers() {
+                document.querySelectorAll('.product-select').forEach((select, index) => {
+                    select.addEventListener('change', function () {
+                        const productId =select.value;
+                        fetch(`/Sale/Price/${productId}`)
+                            .then(response => response.json())
+                            .then(price => {
+                                document.querySelector(`.sale-detail:nth-child(${index + 1}) .price-input`).value = price.toFixed(2);
+                                updateSubtotal(index);
+                            });
+                    });
+                });
+
+                document.querySelectorAll('.quantity-input').forEach((input, index) =>{
+                    input.addEventListener('change', function(){
+                         updateSubtotal(index);
+
+                    });
+                });
+            }
+
+            attachEventHandlers();
+
+            document.getElementById('add-detail').addEventListener('click', function () {
+                const newDetail = document.createElement('div');
+                newDetail.classList.add('sale-detail');
+                newDetail.innerHTML = `<div class="form-group">
+                                                        <label>Product</label>
+                                                        <select name="SaleDetails[${detailIndex}].ProductID" class="form-control product-select">
+                                                            <option value="">Select Product</option>
+        @foreach (var product in ViewBag.Products)
+        {
+                                                                                                    <option value="@product.ProductID">@product.Name</option>
+        }
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label class="control-label">Quantity</label>
+                                                            <input class="form-control quantity-input" type="number" min="1"
+                                                                name="SaleDetails[${detailIndex}].Quantity" />
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label class="control-label">Unit Price</label>
+                                                            <input class="form-control price-input" readonly name="SaleDetails[${detailIndex}].Price" />
+                                                        </div>
+
+                                                        <div class="form-group">
+                                                            <label class="control-label">Subtotal</label>
+                                                            <input class="form-control subtotal-input" readonly name="SaleDetails[${detailIndex}].Subtotal" />
+                                                        </div>`;
+
+                document.getElementById('sale-details').appendChild(newDetail);
+                attachEventHandlers();
+                detailIndex++;
+            });
+            updateTotal();
+        });
+    </script>
+}

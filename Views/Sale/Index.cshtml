@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Index";
+}
+
+@model IEnumerable<ProductSales.DTOs.SaleDTO>
+<h1>Sales</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create new sale</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Sale ID</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Options</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.SaleID</td>
+                <td>@item.Date.ToShortDateString()</td>
+                <td>@item.Total.ToString("C")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.SaleID">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.SaleID">Details</a>
+                    <a asp-action="Delete" asp-route-id="@item.SaleID">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
